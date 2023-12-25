@@ -1,18 +1,39 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const router = useRouter();
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!email || !password) {
       setError("Email atau password tidak boleh kosong");
       return;
+    }
+
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setError("Email atau password salah");
+        return;
+      }
+
+      router.replace("/");
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -20,10 +41,13 @@ export default function login() {
     <div className="bg min-h-screen flex items-center justify-center">
       <form
         action="login"
-        className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg py-20 px-10 shadow-lg"
+        className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg py-20 px-10 shadow-lg transition-all duration-200 ease-out hover:shadow-2xl"
+        method="post"
         onSubmit={handleSubmit}
       >
-        <h1 className="font-semibold text-2xl">Login</h1>
+        <h1 className="font-semibold text-3xl bg-gradient-to-tr bg-clip-text text-transparent from-violet-600 to-fuchsia-800">
+          LOGIN
+        </h1>
         <p className="text-red-600">{error}</p>
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="text-left text-lg text-slate-800">
@@ -57,7 +81,7 @@ export default function login() {
         </button>
         <p>
           Belum punya akun?{" "}
-          <a href="#" className="text-violet-600">
+          <a href="/register" className="text-violet-600">
             Buat akun
           </a>
         </p>

@@ -1,5 +1,5 @@
 import NextAuth from "next-auth/next";
-import { CredentialsProvider } from "next-auth/providers/credentials";
+import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "../../../../lib/dbConnect";
 import User from "../../../../models/user";
 const bcrypt = require("bcrypt");
@@ -15,7 +15,9 @@ const handler = NextAuth({
         const { email, password } = credentials;
         try {
           await dbConnect();
-          const user = User.findOne({ email });
+          const user = await User.findOne({ email });
+
+          console.log(user);
 
           if (!user) {
             return null;
@@ -25,6 +27,8 @@ const handler = NextAuth({
             password,
             user.password
           );
+
+          console.log(comparedPassword);
 
           if (!comparedPassword) {
             return null;
@@ -38,6 +42,16 @@ const handler = NextAuth({
       },
     }),
   ],
+  callbacks: {},
+  session: {
+    strategy: "jwt",
+    secret: process.env.NEXTAUTH_SECRET,
+    encryption: true,
+    maxAge: 1 * 60, // 1 minute
+  },
+  pages: {
+    signIn: "localhost:3000/login",
+  },
 });
 
 export { handler as GET, handler as POST };
